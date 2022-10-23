@@ -4,11 +4,13 @@ PACKAGE_NAME = constraintstest
 BUNDLE_NAME = constraintslayouttest
 
 constraintslayouttest_HEADER_FILES = \
-	ConstraintsSpyWindow.h
+	ConstraintsSpyWindow.h LayoutSpyView.h
 constraintslayouttest_OBJC_FILES = \
-	LayoutConstraintTestCase.m
+	LayoutConstraintTestCase.m \
+	NSAutoresizingLayoutConstraintTests.m \
+	NSLayoutConstraintTests.m
 ADDITIONAL_TOOL_LIBS = -lxctest
-constraintslayouttest_INCLUDE_DIRS = -I./../tools-xctest
+constraintslayouttest_INCLUDE_DIRS = -I./../tools-xctest -I./../GSAutoLayoutEngine/GSAutoLayoutEngine 
 
 -include GNUmakefile.preamble
 include $(GNUSTEP_MAKEFILES)/bundle.make

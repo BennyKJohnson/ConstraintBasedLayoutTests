@@ -2,6 +2,8 @@
 #import <AppKit/AppKit.h>
 #import "ConstraintsSpyWindow.h"
 #import "ConstraintLayoutSpyView.h"
+#import "GSAutoLayoutEngine.h"
+#import "LayoutSpyView.h"
 
 @interface LayoutConstraintTestCase : XCTestCase
 {
@@ -256,5 +258,20 @@
     XCTAssertEqual(layoutSpyView.layoutCalledCount, 1);
     XCTAssertEqual(subViewSpyView.layoutCalledCount, 1);
 }
+
+// -(void)testLayoutEngineDidChangeAlignmentRectSetsNeedLayoutOfSuperview
+// {
+//     NSView *rootView = [self createViewWithLayoutEngine:NSMakeSize(400, 400)];
+//     LayoutSpyView *subView = [[LayoutSpyView alloc] init];
+//     [rootView addSubview:subView];
+//     NSLog(@"After adding sub view: %@", subView.superview);
+
+//     [rootView layoutSubtreeIfNeeded];
+//     XCTAssertFalse(rootView.needsLayout);
+
+//     [self centerSubView:subView inSuperView:rootView];
+
+//     XCTAssertTrue(rootView.needsLayout);
+// }
 
 @end

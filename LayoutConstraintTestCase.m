@@ -2,7 +2,6 @@
 #import <AppKit/AppKit.h>
 #import "ConstraintsSpyWindow.h"
 #import "ConstraintLayoutSpyView.h"
-#import "GSAutoLayoutEngine.h"
 #import "LayoutSpyView.h"
 
 @interface LayoutConstraintTestCase : XCTestCase
@@ -257,6 +256,25 @@
 
     XCTAssertEqual(layoutSpyView.layoutCalledCount, 1);
     XCTAssertEqual(subViewSpyView.layoutCalledCount, 1);
+}
+
+-(void)testAddingConstraintsToViewInWindowBootstrapsAutolayout
+{
+    NSWindow *window = [[NSWindow alloc] init];
+    NSView *view = [[NSView alloc] init];
+    [window.contentView addSubview: view];
+
+    NSLayoutConstraint *heightConstraint = [NSLayoutConstraint
+        constraintWithItem:view
+        attribute:NSLayoutAttributeHeight
+        relatedBy:NSLayoutRelationEqual
+        toItem:nil
+        attribute:NSLayoutAttributeNotAnAttribute
+        multiplier:1.0 constant:1];
+    
+    [view addConstraint: heightConstraint];
+    
+    XCTAssertNotNil([window _layoutEngine]);
 }
 
 // -(void)testLayoutEngineDidChangeAlignmentRectSetsNeedLayoutOfSuperview

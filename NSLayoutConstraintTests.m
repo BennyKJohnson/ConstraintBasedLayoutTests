@@ -14,17 +14,19 @@
 }
 
 - (void)initLayoutEngineWithWidthAndHeightConstraintsForView: (NSView*)view size: (NSSize)size
-{    
+{   
+    NSWindow *window = [[NSWindow alloc] init];
     NSLayoutConstraint *widthConstraint = [NSLayoutConstraint
             constraintWithItem:view attribute:NSLayoutAttributeWidth
             relatedBy:NSLayoutRelationEqual
             toItem:nil
             attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant: size.width];
     NSLayoutConstraint *heightConstraint = [NSLayoutConstraint constraintWithItem:view attribute:NSLayoutAttributeHeight relatedBy:NSLayoutRelationEqual toItem:nil attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:size.height];
-    [view _initializeLayoutEngine];
-    GSAutoLayoutEngine *engine = [view _layoutEngine];
-    [engine addConstraint: widthConstraint];
-    [engine addConstraint: heightConstraint];
+
+    [window setContentView: view];
+    [view addConstraint: widthConstraint];
+    [view addConstraint: heightConstraint];
+    [view updateConstraintsForSubtreeIfNeeded];
 }
 
 - (void)testCanSetLayoutEngineOnView {
@@ -366,8 +368,11 @@
 
 - (void)testViewConstraintsReturnsAllActiveConstraintsOnView
 {
+    NSView *rootView = [[NSView alloc] init];
+    [rootView _initializeLayoutEngine];
     NSView *view = [[NSView alloc] init];
-    [view _initializeLayoutEngine];
+    [rootView addSubview: view];
+
     NSLayoutConstraint *width = [NSLayoutConstraint
         constraintWithItem:view
         attribute:NSLayoutAttributeWidth
@@ -414,8 +419,8 @@
 {
     NSView *superview = [[NSView alloc] init];
     NSView *view = [[NSView alloc] init];
-    GSAutoLayoutEngine *engine = [[GSAutoLayoutEngine alloc] init];
-    [superview _setLayoutEngine: engine];
+    NSWindow *window = [[NSWindow alloc] init];
+    [window setContentView: superview];
     [superview addSubview: view];
 
     [view setAutoresizingMask:NSViewWidthSizable];
@@ -426,5 +431,50 @@
     XCTAssertEqual(superViewConstraintCount, 1);
 }
 
+/*
+* When the user resizes the window, the width and height constraints for the window view are updated to reflect the new size
+* when these constraints are updated the alignment rects of the window's views are recalculated
+*/
+- (void)testUpdatesLayoutAfterWindowResize
+{
+    NSWindow *window = [[NSWindow alloc]
+        initWithContentRect: NSMakeRect(0,0, 400, 400)
+        styleMask: NSTitledWindowMask
+        backing: NSBackingStoreBuffered
+        defer: NO];
+    NSView *windowView = [window contentView];
+    [windowView setAutoresizingMask: NSViewWidthSizable | NSViewHeightSizable];
+    NSView *rightBottomPinView = [[NSView alloc] init];
+    [windowView addSubview: rightBottomPinView];
+
+    rightBottomPinView.translatesAutoresizingMaskIntoConstraints = NO;
+
+    NSLayoutConstraint *rightConstraint = [NSLayoutConstraint constraintWithItem:rightBottomPinView attribute:NSLayoutAttributeRight relatedBy:NSLayoutRelationEqual toItem:windowView attribute:NSLayoutAttributeRight multiplier:1.0 constant:0];
+    NSLayoutConstraint *bottomConstraint = [NSLayoutConstraint constraintWithItem:rightBottomPinView attribute:NSLayoutAttributeBottom relatedBy:NSLayoutRelationEqual toItem:windowView attribute:NSLayoutAttributeBottom multiplier:1.0 constant:0];
+    NSLayoutConstraint *widthConstraint = [NSLayoutConstraint constraintWithItem:rightBottomPinView attribute:NSLayoutAttributeWidth relatedBy:NSLayoutRelationEqual toItem:nil attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:100];
+    NSLayoutConstraint *heightConstraint = [NSLayoutConstraint constraintWithItem:rightBottomPinView attribute:NSLayoutAttributeHeight relatedBy:NSLayoutRelationEqual toItem:nil attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:100];
+    [windowView addConstraints:@[rightConstraint, bottomConstraint, widthConstraint, heightConstraint]];
+
+    [window layoutIfNeeded];
+ 
+    XCTAssertTrue(NSEqualRects([rightBottomPinView frame], NSMakeRect(300,0, 100, 100)));
+
+    // Simulate window resize event
+    NSEvent *windowResizeEvent = [NSEvent
+         otherEventWithType: NSAppKitDefined
+                       location: NSMakePoint(0,0)
+                  modifierFlags: 0
+                      timestamp: 0
+                   windowNumber: window.windowNumber
+                        context: nil
+                        subtype: GSAppKitWindowResized
+                          data1: 300
+                          data2: 400];
+
+    [window sendEvent: windowResizeEvent];
+    [window layoutIfNeeded];
+
+    XCTAssertTrue(NSEqualRects([rightBottomPinView frame], NSMakeRect(200,0, 100, 100))); 
+}
 
 @end

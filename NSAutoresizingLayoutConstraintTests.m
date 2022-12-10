@@ -255,7 +255,6 @@ NSUInteger maxYAttribute = 37;
 {
     NSRect frame = NSMakeRect(10, 25, 100, 200);
     NSArray *constraints = [NSAutoresizingMaskLayoutConstraint constraintsWithAutoresizingMask:NSViewMinXMargin | NSViewMinYMargin subitem:subView frame:frame superitem:superView bounds:NSMakeRect(1, 2, 4, 8)];
-    NSLog(@"%@", constraints);
     [self assertSharedAttributesOnConstraints:constraints];
     
     NSLayoutConstraint *minXConstraint = constraints[0];

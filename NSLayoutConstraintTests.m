@@ -16,16 +16,9 @@
 - (void)initLayoutEngineWithWidthAndHeightConstraintsForView: (NSView*)view size: (NSSize)size
 {   
     NSWindow *window = [[NSWindow alloc] init];
-    NSLayoutConstraint *widthConstraint = [NSLayoutConstraint
-            constraintWithItem:view attribute:NSLayoutAttributeWidth
-            relatedBy:NSLayoutRelationEqual
-            toItem:nil
-            attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant: size.width];
-    NSLayoutConstraint *heightConstraint = [NSLayoutConstraint constraintWithItem:view attribute:NSLayoutAttributeHeight relatedBy:NSLayoutRelationEqual toItem:nil attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:size.height];
-
     [window setContentView: view];
-    [view addConstraint: widthConstraint];
-    [view addConstraint: heightConstraint];
+    [view setFrame: NSMakeRect(0,0, size.width, size.height)];
+
     [view updateConstraintsForSubtreeIfNeeded];
 }
 
@@ -59,15 +52,6 @@
     XCTAssertEqual([window _layoutEngine], engine);
 }
 
-// - (void)testInitializesLayoutEngineAfterAddingViewThatRequiresLayoutEngine {
-//     NSWindow *window = [[NSWindow alloc] init];
-//     XCTAssertNil([window _layoutEngine]);
-//     NSView *view = [[NSView alloc ]init];
-//     NSLayoutConstraint *widthConstraint = [[NSLayoutConstraint alloc] init]
-
-//     XCTAssertTrue([[window _layoutEngine] isKindOfClass: [GSAutoLayoutEngine class]]);
-// }
-
 - (void)testCanInitalizeAutoLayoutEngineOnView {
     NSView *view = [[NSView alloc] init];
     [view _initializeLayoutEngine];
@@ -89,7 +73,6 @@
 {
     NSView *view = [[NSView alloc] init];
     [self initLayoutEngineWithWidthAndHeightConstraintsForView: view size: NSMakeSize(500,500)];
-
     NSRect viewAlignmentRect = [[view _layoutEngine] alignmentRectForView: view];
     XCTAssertTrue(NSEqualRects(viewAlignmentRect,NSMakeRect(0, 0, 500, 500)));
 }
@@ -133,7 +116,6 @@
 {
     NSView *view = [[NSView alloc] init];
     [self initLayoutEngineWithWidthAndHeightConstraintsForView: view size: NSMakeSize(500,500)];
-
     NSView *subView = [[NSView alloc] init];
     [view addSubview: subView];
 

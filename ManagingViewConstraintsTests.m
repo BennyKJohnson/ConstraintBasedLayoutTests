@@ -3,11 +3,11 @@
 #import <AppKit/NSAutoresizingMaskLayoutConstraint.h>
 #import "GSAutoLayoutEngine.h"
 
-@interface NSLayoutConstraintTests : XCTestCase
+@interface ManagingViewConstraintsTests : XCTestCase
 
 @end
 
-@implementation NSLayoutConstraintTests
+@implementation ManagingViewConstraintsTests
 
 - (void)setUp {
     [NSApplication sharedApplication];

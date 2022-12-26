@@ -4,12 +4,12 @@
 #import "ConstraintLayoutSpyView.h"
 #import "LayoutSpyView.h"
 
-@interface LayoutConstraintTestCase : XCTestCase
+@interface TriggeringAutoLayoutTests : XCTestCase
 {
 }
 @end
 
-@implementation LayoutConstraintTestCase
+@implementation TriggeringAutoLayoutTests
 
 -(void)setUp
 {

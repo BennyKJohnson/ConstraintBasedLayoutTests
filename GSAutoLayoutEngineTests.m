@@ -737,9 +737,12 @@ CGFloat minimalPriorityHackValue = 1.0;
     [alEngine addConstraint: constraint];
     [alEngine removeConstraint: constraint];
 
-    XCTAssertEqual([solver.removedConstraints count], 2);
     // Baseline constraint will add width + height + baseline property constraints + baseline internal
-    XCTAssertEqual(solver.removedConstraints[1], solver.addedConstraints[3]);
+    XCTAssertEqual([solver.removedConstraints count], 3);
+    // Removes baseline property edit constraint
+    XCTAssertEqual(solver.removedConstraints[2], solver.addedConstraints[3]);
+    // Removes baseline minY constraint
+    XCTAssertEqual(solver.removedConstraints[1], solver.addedConstraints[2]);
 }
 
 -(void)testRemovesSupportingInternalConstraintWhenRemovingConstraintWithFirstBaselineAttribute
@@ -758,9 +761,9 @@ CGFloat minimalPriorityHackValue = 1.0;
     [alEngine addConstraint: constraint];
     [alEngine removeConstraint: constraint];
 
-    XCTAssertEqual([solver.removedConstraints count], 2);
+    XCTAssertEqual([solver.removedConstraints count], 3);
     // Baseline constraint will add width + height + baseline property constraints + baseline internal
-    XCTAssertEqual(solver.removedConstraints[1], solver.addedConstraints[3]);
+    XCTAssertEqual(solver.removedConstraints[2], solver.addedConstraints[3]);
 }
 
 -(CSWSpySimplexSolver*)addAndRemoveConstraintWithAttribute: (NSLayoutAttribute)attribute

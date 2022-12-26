@@ -4,6 +4,7 @@
 #import "CustomBaselineView.h"
 #import "CustomInstrinctContentSizeView.h"
 #import "LayoutSpyView.h"
+#import "CSWSpySimplexSolver.h"
 
 // TODO Fix priority strength to support lower priorities that have a value greater than 1
 CGFloat minimalPriorityHackValue = 1.0;
@@ -710,6 +711,65 @@ CGFloat minimalPriorityHackValue = 1.0;
     
     [self assertAlignmentRect:[engine alignmentRectForView:view1] expectedRect:NSMakeRect(0, 150, 50, 250)];
     [self assertAlignmentRect:[engine alignmentRectForView:view2] expectedRect:NSMakeRect(0, 0, 50, 150)];
+}
+
+// There is probably a better way to assert the supporting constraints which does not require so many implementation details
+-(void)assertConstraint: (CSWConstraint*)constraint name: (NSString*)name
+{
+    NSDictionary *supportConstraintTermsByName = @{
+        @"CenterX": @{ @"view0.width": @(0.5), @"view0.centerX": @(-1.0) },
+        @"CenterY": @{ @"view0.centerY": @(-1), @"view0.height": @(0.5) }
+    };
+    NSDictionary *expectedTerms = supportConstraintTermsByName[name];
+    for (NSString *termKey in [expectedTerms allKeys]) {
+        CSWVariable *matchingVar = nil;  
+        for (CSWVariable *var in [[constraint expression] terms]) {
+            if ([var.name isEqualToString: termKey]) {
+                matchingVar = var;
+            }
+        }
+
+        XCTAssertNotNil(matchingVar);
+        XCTAssertEqualWithAccuracy([expectedTerms[termKey] floatValue], [[constraint expression] coefficientForTerm: matchingVar], 0.001);
+    }
+}
+
+-(void)testRemovesSupportingInternalCenterXConstraintWhenRemovingCenterXConstraint
+{
+    CSWSpySimplexSolver *solver = [[CSWSpySimplexSolver alloc] init];
+    GSAutoLayoutEngine *alEngine = [[GSAutoLayoutEngine alloc] initWithSolver: solver];
+
+    NSView *view = [[NSView alloc] init];
+    NSLayoutConstraint *centerConstraintX = [NSLayoutConstraint
+        constraintWithItem:view attribute:NSLayoutAttributeCenterX
+        relatedBy:NSLayoutRelationEqual
+        toItem:nil
+        attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:100];
+    
+    [alEngine addConstraint: centerConstraintX];
+    [alEngine removeConstraint: centerConstraintX];
+  
+    XCTAssertEqual([solver.removedConstraints count], 2);
+    [self assertConstraint: solver.removedConstraints[1] name: @"CenterX"];
+}
+
+-(void)testRemovesSupportingInternalCenterYConstraintWhenRemovingCenterYConstraint
+{
+    CSWSpySimplexSolver *solver = [[CSWSpySimplexSolver alloc] init];
+    GSAutoLayoutEngine *alEngine = [[GSAutoLayoutEngine alloc] initWithSolver: solver];
+
+    NSView *view = [[NSView alloc] init];
+    NSLayoutConstraint *centerConstraintY = [NSLayoutConstraint
+        constraintWithItem:view attribute:NSLayoutAttributeCenterY
+        relatedBy:NSLayoutRelationEqual
+        toItem:nil
+        attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:100];
+    
+    [alEngine addConstraint: centerConstraintY];
+    [alEngine removeConstraint: centerConstraintY];
+  
+    XCTAssertEqual([solver.removedConstraints count], 2);
+    [self assertConstraint: solver.removedConstraints[1] name: @"CenterY"];
 }
 
 //-(void)testNotifyViewsOfAlignmentRectChanges

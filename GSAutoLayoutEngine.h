@@ -1,4 +1,5 @@
 #import <Foundation/Foundation.h>
+#import "CSWSimplexSolver.h"
 
 @class NSView;
 @class NSLayoutConstraint;
@@ -24,6 +25,8 @@ NS_ASSUME_NONNULL_BEGIN
 -(NSArray*)constraintsForView: (NSView*)view;
 
 -(void)debugSolver;
+
+-(instancetype)initWithSolver: (CSWSimplexSolver*)solver;
 
 @end
 

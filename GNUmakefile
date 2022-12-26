@@ -9,7 +9,8 @@ constraintslayouttest_HEADER_FILES = \
 constraintslayouttest_OBJC_FILES = \
 	TriggeringAutoLayoutTests.m \
 	NSAutoresizingLayoutConstraintTests.m \
-	ManagingViewConstraintsTests.m
+	ManagingViewConstraintsTests.m \
+	AutoLayoutCompatabilityTests.m
 ADDITIONAL_TOOL_LIBS = -lxctest
 constraintslayouttest_INCLUDE_DIRS = -I./../tools-xctest
 constraintslayouttest_LDFLAGS = --verbose

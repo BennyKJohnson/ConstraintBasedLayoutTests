@@ -5,12 +5,16 @@ BUNDLE_NAME = constraintslayouttest
 
 constraintslayouttest_HEADER_FILES = \
 	ConstraintsSpyWindow.h LayoutSpyView.h \
-	GSAutoLayoutEngine.h
+	GSAutoLayoutEngine.h \
+	CustomBaselineView.h \
+	CustomInstrinctContentSizeView.h
 constraintslayouttest_OBJC_FILES = \
 	TriggeringAutoLayoutTests.m \
 	NSAutoresizingLayoutConstraintTests.m \
 	ManagingViewConstraintsTests.m \
-	AutoLayoutCompatabilityTests.m
+	AutoLayoutCompatabilityTests.m \
+	GSAutoLayoutEngineTestCase.m \
+	LayoutSpyView.m
 ADDITIONAL_TOOL_LIBS = -lxctest
 constraintslayouttest_INCLUDE_DIRS = -I./../tools-xctest
 constraintslayouttest_LDFLAGS = --verbose

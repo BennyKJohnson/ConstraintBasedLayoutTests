@@ -74,16 +74,33 @@ CGFloat minimalPriorityHackValue = 1.0;
 - (NSView*)createRootViewWithSize: (NSSize)size
 {
     NSView *view = [[NSView alloc] init];
-    [engine addInternalConstraintsToView:view];
+
+    NSLayoutConstraint *viewMinXConstraint = [NSLayoutConstraint
+            constraintWithItem:view attribute:32
+            relatedBy:NSLayoutRelationEqual
+            toItem:nil
+            attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:0];
+    
+    NSLayoutConstraint *viewMinYConstraint = [NSLayoutConstraint
+            constraintWithItem:view attribute:33
+            relatedBy:NSLayoutRelationEqual
+            toItem:nil
+            attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:0];
+
     NSLayoutConstraint *widthConstraint = [NSLayoutConstraint
             constraintWithItem:view attribute:NSLayoutAttributeWidth
             relatedBy:NSLayoutRelationEqual
             toItem:nil
             attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:size.width];
+    
     NSLayoutConstraint *heightConstraint = [NSLayoutConstraint constraintWithItem:view attribute:NSLayoutAttributeHeight relatedBy:NSLayoutRelationEqual toItem:nil attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:size.height];
     
-    [engine addConstraint: widthConstraint];
-    [engine addConstraint: heightConstraint];
+    [engine addConstraints: @[
+        viewMinXConstraint,
+        viewMinYConstraint,
+        widthConstraint,
+        heightConstraint
+    ]];
 
     return view;
 }
@@ -161,6 +178,7 @@ CGFloat minimalPriorityHackValue = 1.0;
     }
 
     NSRect subViewFrame = [engine alignmentRectForView:subView];
+    NSLog(@"%@", NSStringFromRect(subViewFrame));
     [self assertAlignmentRect:subViewFrame expectedRect: NSMakeRect(10, 10, 780, 580)];
 }
 

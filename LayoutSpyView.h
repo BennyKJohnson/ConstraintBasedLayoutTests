@@ -8,19 +8,12 @@
 #ifndef LayoutSpyView_h
 #define LayoutSpyView_h
 
+#import <AppKit/AppKit.h>
+
 @interface LayoutSpyView: NSView
 
 @property (nonatomic) NSUInteger layoutEngineDidChangeAlignmentRectCallCount;
 
 @end
-
-@implementation LayoutSpyView
-
--(void)layoutEngineDidChangeAlignmentRect {
-    self.layoutEngineDidChangeAlignmentRectCallCount++;
-}
-
-@end
-
 
 #endif /* LayoutSpyView_h */

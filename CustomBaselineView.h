@@ -1,6 +1,8 @@
 #ifndef CustomBaselineView_h
 #define CustomBaselineView_h
 
+#import <AppKit/AppKit.h>
+
 @interface CustomBaselineView: NSView
 
 @property CGFloat baselineOffsetFromBottom;

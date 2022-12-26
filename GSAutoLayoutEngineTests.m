@@ -145,7 +145,19 @@ CGFloat minimalPriorityHackValue = 1.0;
 -(void)testSolvesLayoutForRootViewWithWidthAndHeightConstraints
 {
     NSView *rootView = [[NSView alloc] init];
-    [engine addInternalConstraintsToView:rootView];
+    NSLayoutConstraint *viewMinXConstraint = [NSLayoutConstraint
+            constraintWithItem:rootView attribute:32
+            relatedBy:NSLayoutRelationEqual
+            toItem:nil
+            attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:0];
+    
+    NSLayoutConstraint *viewMinYConstraint = [NSLayoutConstraint
+            constraintWithItem:rootView attribute:33
+            relatedBy:NSLayoutRelationEqual
+            toItem:nil
+            attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:0];
+    [engine addConstraints: @[viewMinXConstraint, viewMinYConstraint]];
+;
     // Define width and height
     NSLayoutConstraint *widthConstraint = [NSLayoutConstraint
             constraintWithItem:rootView attribute:NSLayoutAttributeWidth

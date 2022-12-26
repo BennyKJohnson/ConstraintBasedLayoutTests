@@ -13,7 +13,7 @@ constraintslayouttest_OBJC_FILES = \
 	NSAutoresizingLayoutConstraintTests.m \
 	ManagingViewConstraintsTests.m \
 	AutoLayoutCompatabilityTests.m \
-	GSAutoLayoutEngineTestCase.m \
+	GSAutoLayoutEngineTests.m \
 	LayoutSpyView.m
 ADDITIONAL_TOOL_LIBS = -lxctest
 constraintslayouttest_INCLUDE_DIRS = -I./../tools-xctest

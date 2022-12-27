@@ -18,8 +18,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 -(void)addInternalConstraintsToView: (NSView*)view;
 
--(void)addIntrinsicContentSizeConstraintsToView: (NSView*)view;
-
 -(NSRect)alignmentRectForView: (NSView*)view;
 
 -(NSArray*)constraintsForView: (NSView*)view;

@@ -44,4 +44,10 @@
     XCTAssertEqual(superViewConstraintCount, 1);
 }
 
+-(void)testViewHasNoInstrinsicMetricByDefault
+{
+    NSView *view = [[NSView alloc] init];
+    XCTAssertTrue(NSEqualSizes([view intrinsicContentSize], NSMakeSize(-1, -1)));
+}
+
 @end

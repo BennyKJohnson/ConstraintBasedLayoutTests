@@ -10,6 +10,8 @@
 
 @property (nonatomic, strong) NSMutableArray *removedConstraints;
 
+@property (nonatomic) NSInteger suggestEditVariableCallCount;
+
 @end
 
 #endif /* CSWSpySimplexSolver_h */

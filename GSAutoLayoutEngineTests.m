@@ -706,7 +706,14 @@ CGFloat minimalPriorityHackValue = 1.0;
     [self assertAlignmentRect:[engine alignmentRectForView:view2] expectedRect:NSMakeRect(0, 0, 50, 150)];
 }
 
--(void)assertRemovedSupporingConstraintsFILO: (CSWSpySimplexSolver*)solver 
+-(void)assertEveryAddedConstraintsWasRemoved: (CSWSpySimplexSolver*)solver
+{
+    for (CSWConstraint *addedConstraint in solver.addedConstraints) {
+        XCTAssertTrue([solver.removedConstraints containsObject: addedConstraint]);
+    }
+}
+
+-(void)assertRemovedSupporingConstraints: (CSWSpySimplexSolver*)solver 
 {
     // First two constraints are the width and height for the view
     XCTAssertEqual([solver.removedConstraints count], 4);
@@ -716,6 +723,8 @@ CGFloat minimalPriorityHackValue = 1.0;
     XCTAssertEqual(solver.removedConstraints[2], solver.addedConstraints[0]);
     // internal height maxY-minY constraint
     XCTAssertEqual(solver.removedConstraints[3], solver.addedConstraints[1]);
+
+    [self assertEveryAddedConstraintsWasRemoved: solver];
 }
 
 -(CSWSpySimplexSolver*)addAndRemoveConstraintWithAttribute: (NSLayoutAttribute)attribute
@@ -739,49 +748,49 @@ CGFloat minimalPriorityHackValue = 1.0;
 -(void)testRemovesSupportingInternalConstraintWhenRemovingConstraintWithLeadingAttribute
 {
     CSWSpySimplexSolver *solver = [self addAndRemoveConstraintWithAttribute: NSLayoutAttributeLeading];
-    [self assertRemovedSupporingConstraintsFILO:solver];
+    [self assertRemovedSupporingConstraints:solver];
 }
 
 -(void)testRemovesSupportingInternalConstraintWhenRemovingConstraintWithTrailingAttribute
 {
     CSWSpySimplexSolver *solver = [self addAndRemoveConstraintWithAttribute: NSLayoutAttributeTrailing];
-    [self assertRemovedSupporingConstraintsFILO:solver];
+    [self assertRemovedSupporingConstraints:solver];
 }
 
 -(void)testRemovesSupportingInternalConstraintWhenRemovingConstraintWithLeftAttribute
 {
     CSWSpySimplexSolver *solver = [self addAndRemoveConstraintWithAttribute: NSLayoutAttributeLeft];
-    [self assertRemovedSupporingConstraintsFILO:solver];
+    [self assertRemovedSupporingConstraints:solver];
 }
 
 -(void)testRemovesSupportingInternalConstraintWhenRemovingConstraintWithRightAttribute
 {
     CSWSpySimplexSolver *solver = [self addAndRemoveConstraintWithAttribute: NSLayoutAttributeRight];
-    [self assertRemovedSupporingConstraintsFILO:solver];
+    [self assertRemovedSupporingConstraints:solver];
 }
 
 -(void)testRemovesSupportingInternalConstraintWhenRemovingConstraintWithTopAttribute
 {
     CSWSpySimplexSolver *solver = [self addAndRemoveConstraintWithAttribute: NSLayoutAttributeTop];
-    [self assertRemovedSupporingConstraintsFILO:solver];
+    [self assertRemovedSupporingConstraints:solver];
 }
 
 -(void)testRemovesSupportingInternalConstraintWhenRemovingConstraintWithBottomAttribute
 {
     CSWSpySimplexSolver *solver = [self addAndRemoveConstraintWithAttribute: NSLayoutAttributeBottom];
-    [self assertRemovedSupporingConstraintsFILO:solver];
+    [self assertRemovedSupporingConstraints:solver];
 }
 
 -(void)testRemovesSupportingInternalConstraintWhenRemovingConstraintWithCenterXAttribute
 {
     CSWSpySimplexSolver *solver = [self addAndRemoveConstraintWithAttribute: NSLayoutAttributeCenterX];
-    [self assertRemovedSupporingConstraintsFILO:solver];
+    [self assertRemovedSupporingConstraints:solver];
 }
 
 -(void)testRemovesSupportingInternalConstraintWhenRemovingConstraintWithCenterYAttribute
 {
     CSWSpySimplexSolver *solver = [self addAndRemoveConstraintWithAttribute: NSLayoutAttributeCenterY];
-    [self assertRemovedSupporingConstraintsFILO:solver];
+    [self assertRemovedSupporingConstraints:solver];
 }
 
 -(void)testRemovesSupportingInternalConstraintWhenRemovingConstraintWithBaselineAttribute
@@ -853,9 +862,7 @@ CGFloat minimalPriorityHackValue = 1.0;
     // second view = width + height + supporting leading constraint
     // +1 main constraint
     XCTAssertEqual([solver.removedConstraints count], 7);
-    for (CSWConstraint *addedConstraint in solver.addedConstraints) {
-        XCTAssertTrue([solver.removedConstraints containsObject: addedConstraint]);
-    }
+    [self assertEveryAddedConstraintsWasRemoved: solver];
 }
 
 -(void)testDoesNotRemoveSupportingInternalViewConstraintsIfUsedByAnotherConstraint
@@ -889,6 +896,45 @@ CGFloat minimalPriorityHackValue = 1.0;
     XCTAssertEqual([solver.removedConstraints count], 5);
     XCTAssertFalse([solver.removedConstraints containsObject: solver.addedConstraints[0]]);
     XCTAssertFalse([solver.removedConstraints containsObject: solver.addedConstraints[1]]);
+}
+
+-(void)testRemovesInstrictSizeConstraintsWhenRemovingConstraint
+{
+    CustomInstrinctContentSizeView *view = [CustomInstrinctContentSizeView withInstrinctContentSize:NSMakeSize(1, 1)];
+    NSLayoutConstraint *constraint = [NSLayoutConstraint
+        constraintWithItem:view attribute:NSLayoutAttributeLeft
+        relatedBy:NSLayoutRelationEqual
+        toItem:nil
+        attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:0];
+
+    CSWSpySimplexSolver *solver = [[CSWSpySimplexSolver alloc] init];
+    GSAutoLayoutEngine *alEngine = [[GSAutoLayoutEngine alloc] initWithSolver: solver];
+    
+    [alEngine addConstraint: constraint];
+    [alEngine removeConstraint: constraint];
+
+    XCTAssertEqual([solver.removedConstraints count], 10);
+    [self assertEveryAddedConstraintsWasRemoved: solver];
+}
+
+-(void)testRemovesObserverWhenRemovingConstraint
+{
+    CustomBaselineView *view = [[CustomBaselineView alloc] init];
+
+    NSLayoutConstraint *constraint = [NSLayoutConstraint
+        constraintWithItem:view attribute:NSLayoutAttributeBaseline
+        relatedBy:NSLayoutRelationEqual
+        toItem:nil
+        attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:0];
+
+    CSWSpySimplexSolver *solver = [[CSWSpySimplexSolver alloc] init];
+    GSAutoLayoutEngine *alEngine = [[GSAutoLayoutEngine alloc] initWithSolver: solver];
+    
+    [alEngine addConstraint: constraint];
+    [alEngine removeConstraint: constraint];
+    view.baselineOffsetFromBottom = 100;
+    // Should not suggest edit variable after removing constraint
+    XCTAssertEqual(solver.suggestEditVariableCallCount, 1);
 }
 
 //-(void)testNotifyViewsOfAlignmentRectChanges

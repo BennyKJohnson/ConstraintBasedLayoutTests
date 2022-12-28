@@ -459,32 +459,6 @@ CGFloat minimalPriorityHackValue = 1.0;
     XCTAssertTrue(NSEqualRects(subViewFrameAfterUpdatingConstraint, NSMakeRect(0, expectedY, 20, 20)));
 }
 
--(void)testSolvesLayoutWithFirstBaselineConstraintAfterUpdatingValue
-{
-    NSView *rootView = [self createRootViewWithSize:NSMakeSize(400, 400)];
-    
-    CustomBaselineView *baselineView = [self createBaselineViewInsideSuperView:rootView];
-    baselineView.firstBaselineOffsetFromTop = 5;
-    
-    NSView *baselineOffsetView = [[NSView alloc] init];
-    [self addSizeConstraintsToView:baselineOffsetView size:NSMakeSize(20, 20)];
-
-    NSLayoutConstraint *baselineOffsetX = [NSLayoutConstraint constraintWithItem:baselineOffsetView attribute:NSLayoutAttributeLeft relatedBy:NSLayoutRelationEqual toItem:rootView attribute:NSLayoutAttributeLeft multiplier:1.0 constant:0];
-    
-    NSLayoutConstraint *baselineOffsetYConstraint = [NSLayoutConstraint constraintWithItem:baselineOffsetView attribute:NSLayoutAttributeTop relatedBy:NSLayoutRelationEqual toItem:baselineView attribute:NSLayoutAttributeFirstBaseline multiplier:1.0 constant:0];
-    
-    [engine addConstraint:baselineOffsetX];
-    [engine addConstraint:baselineOffsetYConstraint];
-    
-    NSRect subViewFrameAfterUpdatingConstraint = [engine alignmentRectForView:baselineOffsetView];
-    CGFloat expectedY = 400 - 5 - 20;
-    XCTAssertTrue(NSEqualRects(subViewFrameAfterUpdatingConstraint, NSMakeRect(0, expectedY, 20, 20)));
-    
-    baselineView.firstBaselineOffsetFromTop = 0;
-    NSRect offsetViewFrameAfterUpdating = [engine alignmentRectForView:baselineOffsetView];
-    XCTAssertTrue(NSEqualRects(offsetViewFrameAfterUpdating, NSMakeRect(0, 380, 20, 20)));
-}
-
 -(void)testSolvesLayoutWithLastBaselineConstraint
 {
     NSView *rootView = [self createRootViewWithSize:NSMakeSize(400, 400)];
@@ -504,10 +478,6 @@ CGFloat minimalPriorityHackValue = 1.0;
     
     NSRect subViewFrameAfterUpdatingConstraint = [engine alignmentRectForView:baselineOffsetView];
     XCTAssertTrue(NSEqualRects(subViewFrameAfterUpdatingConstraint, NSMakeRect(0, 370, 20, 20)));
-    
-    baselineView.baselineOffsetFromBottom = 0;
-    NSRect offsetViewFrameAfterUpdating = [engine alignmentRectForView:baselineOffsetView];
-    XCTAssertTrue(NSEqualRects(offsetViewFrameAfterUpdating, NSMakeRect(0, 360, 20, 20)));
 }
 
 -(void)testAddingConflictingConstraintsDoesNotThrow
@@ -915,26 +885,6 @@ CGFloat minimalPriorityHackValue = 1.0;
 
     XCTAssertEqual([solver.removedConstraints count], 10);
     [self assertEveryAddedConstraintsWasRemoved: solver];
-}
-
--(void)testRemovesObserverWhenRemovingConstraint
-{
-    CustomBaselineView *view = [[CustomBaselineView alloc] init];
-
-    NSLayoutConstraint *constraint = [NSLayoutConstraint
-        constraintWithItem:view attribute:NSLayoutAttributeBaseline
-        relatedBy:NSLayoutRelationEqual
-        toItem:nil
-        attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:0];
-
-    CSWSpySimplexSolver *solver = [[CSWSpySimplexSolver alloc] init];
-    GSAutoLayoutEngine *alEngine = [[GSAutoLayoutEngine alloc] initWithSolver: solver];
-    
-    [alEngine addConstraint: constraint];
-    [alEngine removeConstraint: constraint];
-    view.baselineOffsetFromBottom = 100;
-    // Should not suggest edit variable after removing constraint
-    XCTAssertEqual(solver.suggestEditVariableCallCount, 1);
 }
 
 //-(void)testNotifyViewsOfAlignmentRectChanges

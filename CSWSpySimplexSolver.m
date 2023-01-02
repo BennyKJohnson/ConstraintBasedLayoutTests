@@ -7,7 +7,7 @@
 {
     self = [super init];
     if (self) {
-        self.addedConstraints = [NSMutableArray array];
+        self.constraints = [NSMutableArray array];
         self.removedConstraints = [NSMutableArray array];
         self.suggestEditVariableCallCount = 0;
     }
@@ -23,7 +23,7 @@
 -(void)addConstraint: (CSWConstraint*)constraint
 {
     [super addConstraint: constraint];
-    [self.addedConstraints addObject: constraint];
+    [self.constraints addObject: constraint];
 }
 
 -(void)suggestEditVariable: (CSWVariable*)variable equals: (CSWDouble)value

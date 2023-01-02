@@ -3,6 +3,7 @@
 #import "ConstraintsSpyWindow.h"
 #import "ConstraintLayoutSpyView.h"
 #import "LayoutSpyView.h"
+#import "CustomInstrinctContentSizeView.h"
 
 @interface TriggeringAutoLayoutTests : XCTestCase
 {
@@ -257,6 +258,37 @@
     XCTAssertEqual(layoutSpyView.layoutCalledCount, 1);
     XCTAssertEqual(subViewSpyView.layoutCalledCount, 1);
 }
+
+-(void)testInvalidateIntrinsicContentSizeUpdatesConstraintsOnTheNextLayoutPass
+{
+    NSWindow *window = [[NSWindow alloc] init];
+    NSView *view = [[NSView alloc] init];
+    CustomInstrinctContentSizeView *subView = [CustomInstrinctContentSizeView withInstrinctContentSize: NSMakeSize(20,20)];
+    [view addSubview:subView];
+    [window setContentView:view];
+
+    // Create constraints to pin to bottom
+    NSLayoutConstraint *pinSubViewToBottom = [NSLayoutConstraint
+        constraintWithItem:subView attribute:NSLayoutAttributeBottom
+        relatedBy:NSLayoutRelationEqual
+        toItem: view
+        attribute:NSLayoutAttributeBottom multiplier:1.0 constant:0];
+    NSLayoutConstraint *pinSubViewToLeft = [NSLayoutConstraint
+        constraintWithItem:subView attribute:NSLayoutAttributeLeft
+        relatedBy:NSLayoutRelationEqual
+        toItem: view
+        attribute:NSLayoutAttributeLeft multiplier:1.0 constant:0];
+    
+    [view addConstraints: @[pinSubViewToBottom, pinSubViewToLeft]];
+    [view layoutSubtreeIfNeeded];
+    NSLog(@"frame: %@", NSStringFromRect([subView frame]));
+    XCTAssertTrue(NSEqualRects([subView frame], NSMakeRect(0,0, 20, 20)));
+
+    subView._intrinsicContentSize = NSMakeSize(40,40);
+    [subView invalidateIntrinsicContentSize];
+    [view layoutSubtreeIfNeeded];
+    XCTAssertTrue(NSEqualRects([subView frame], NSMakeRect(0,0, 40, 40)));
+} 
 
 // -(void)testLayoutEngineDidChangeAlignmentRectSetsNeedLayoutOfSuperview
 // {

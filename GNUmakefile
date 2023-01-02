@@ -16,6 +16,7 @@ constraintslayouttest_OBJC_FILES = \
 	AutoLayoutCompatabilityTests.m \
 	GSAutoLayoutEngineTests.m \
 	LayoutSpyView.m \
+	CustomInstrinctContentSizeView.m \
 	CSWSpySimplexSolver.m
 ADDITIONAL_TOOL_LIBS = -lxctest
 constraintslayouttest_INCLUDE_DIRS = -I./../tools-xctest -I/home/benjamin/CassowaryKit/cassowary

@@ -6,7 +6,7 @@
 
 @interface CSWSpySimplexSolver: CSWSimplexSolver
 
-@property (nonatomic, strong) NSMutableArray *addedConstraints;
+@property (nonatomic, strong) NSMutableArray *constraints;
 
 @property (nonatomic, strong) NSMutableArray *removedConstraints;
 

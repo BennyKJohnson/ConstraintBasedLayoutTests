@@ -455,6 +455,7 @@ CGFloat minimalPriorityHackValue = 1.0;
     [engine addConstraint:baselineOffsetYConstraint];
     
     NSRect subViewFrameAfterUpdatingConstraint = [engine alignmentRectForView:baselineOffsetView];
+    NSLog(@"subview frame: %@", NSStringFromRect(subViewFrameAfterUpdatingConstraint));
     CGFloat expectedY = 400 - 5 - 20;
     XCTAssertTrue(NSEqualRects(subViewFrameAfterUpdatingConstraint, NSMakeRect(0, expectedY, 20, 20)));
 }
@@ -678,7 +679,7 @@ CGFloat minimalPriorityHackValue = 1.0;
 
 -(void)assertEveryAddedConstraintsWasRemoved: (CSWSpySimplexSolver*)solver
 {
-    for (CSWConstraint *addedConstraint in solver.addedConstraints) {
+    for (CSWConstraint *addedConstraint in solver.constraints) {
         XCTAssertTrue([solver.removedConstraints containsObject: addedConstraint]);
     }
 }
@@ -688,11 +689,11 @@ CGFloat minimalPriorityHackValue = 1.0;
     // First two constraints are the width and height for the view
     XCTAssertEqual([solver.removedConstraints count], 4);
     // Supporting internal constraint
-    XCTAssertEqual(solver.removedConstraints[1], solver.addedConstraints[2]);
+    XCTAssertEqual(solver.removedConstraints[1], solver.constraints[2]);
     // internal width maxX-minX constraint
-    XCTAssertEqual(solver.removedConstraints[2], solver.addedConstraints[0]);
+    XCTAssertEqual(solver.removedConstraints[2], solver.constraints[0]);
     // internal height maxY-minY constraint
-    XCTAssertEqual(solver.removedConstraints[3], solver.addedConstraints[1]);
+    XCTAssertEqual(solver.removedConstraints[3], solver.constraints[1]);
 
     [self assertEveryAddedConstraintsWasRemoved: solver];
 }
@@ -782,9 +783,9 @@ CGFloat minimalPriorityHackValue = 1.0;
     // Baseline constraint will add width + height + baseline property constraints + baseline internal
     XCTAssertEqual([solver.removedConstraints count], 5);
     // Removes baseline property edit constraint
-    XCTAssertEqual(solver.removedConstraints[2], solver.addedConstraints[3]);
+    XCTAssertEqual(solver.removedConstraints[2], solver.constraints[3]);
     // Removes baseline minY constraint
-    XCTAssertEqual(solver.removedConstraints[1], solver.addedConstraints[2]);
+    XCTAssertEqual(solver.removedConstraints[1], solver.constraints[2]);
 }
 
 -(void)testRemovesSupportingInternalConstraintWhenRemovingConstraintWithFirstBaselineAttribute
@@ -805,9 +806,9 @@ CGFloat minimalPriorityHackValue = 1.0;
 
     XCTAssertEqual([solver.removedConstraints count], 5);
     // Removes baseline property edit constraint
-    XCTAssertEqual(solver.removedConstraints[2], solver.addedConstraints[3]);
+    XCTAssertEqual(solver.removedConstraints[2], solver.constraints[3]);
     // Removes baseline minY constraint
-    XCTAssertEqual(solver.removedConstraints[1], solver.addedConstraints[2]);
+    XCTAssertEqual(solver.removedConstraints[1], solver.constraints[2]);
 }
 
 -(void)testRemovesSupportingInternalConstraintWhenRemovingConstraintWithFirstAndSecondItem
@@ -864,8 +865,8 @@ CGFloat minimalPriorityHackValue = 1.0;
     // second view = supporting leading constraint
     // +1 main constraint
     XCTAssertEqual([solver.removedConstraints count], 5);
-    XCTAssertFalse([solver.removedConstraints containsObject: solver.addedConstraints[0]]);
-    XCTAssertFalse([solver.removedConstraints containsObject: solver.addedConstraints[1]]);
+    XCTAssertFalse([solver.removedConstraints containsObject: solver.constraints[0]]);
+    XCTAssertFalse([solver.removedConstraints containsObject: solver.constraints[1]]);
 }
 
 -(void)testRemovesInstrictSizeConstraintsWhenRemovingConstraint

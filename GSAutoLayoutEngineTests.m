@@ -909,4 +909,138 @@ CGFloat minimalPriorityHackValue = 1.0;
 //    XCTAssertEqual(subView.layoutEngineDidChangeAlignmentRectCallCount, 4);
 //}
 
+-(void)testConstraintsAffectingLayoutForOrientationViewWithoutConstraintsReturnsEmptyArray {
+    NSView *view = [[NSView alloc] init];
+    [engine addInternalConstraintsToView: view];
+    
+    NSArray *constraints = [engine constraintsAffectingLayoutForOrientation:NSLayoutConstraintOrientationVertical view:view];
+    XCTAssertEqual([constraints count], 0);
+}
+
+-(void)assertConstraintIsIncludedWithAttribute: (NSLayoutAttribute)attribute orientation: (NSLayoutConstraintOrientation)orientation expectedConstraints: (NSArray*)expectedConstraintNames
+{
+    NSView *rootView = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
+    NSDictionary *rootViewConstraints = [self createConstraintsForView:rootView];
+    NSView *view = [[NSView alloc] init];
+    [rootView addSubview:view];
+    
+    NSLayoutConstraint *constraint = [NSLayoutConstraint constraintWithItem:view attribute:attribute relatedBy:NSLayoutRelationEqual toItem:view.superview attribute:attribute multiplier:1.0 constant:0];
+    [engine addConstraint:constraint];
+    
+    NSArray *constraints = [engine constraintsAffectingLayoutForOrientation:orientation view:view];
+    XCTAssertEqual([constraints count], [expectedConstraintNames count]);
+    
+    NSInteger index = 0;
+    for (NSString *name in expectedConstraintNames) {
+        if ([name isEqualToString:@"constraint"]) {
+            XCTAssertEqual([constraints objectAtIndex: index], constraint);
+        } else {
+            XCTAssertEqual([constraints objectAtIndex:index], rootViewConstraints[name]);
+        }
+        
+        index++;
+    }
+}
+
+-(void)testLeftConstraintIsIncludedForHorizontal
+{
+    [self assertConstraintIsIncludedWithAttribute:NSLayoutAttributeLeft orientation:NSLayoutConstraintOrientationHorizontal expectedConstraints:@[@"constraint"]];
+}
+
+-(void)testLeadingConstraintIsIncludedForHorizontal
+{
+    [self assertConstraintIsIncludedWithAttribute:NSLayoutAttributeLeading orientation:NSLayoutConstraintOrientationHorizontal expectedConstraints:@[@"constraint"]];
+}
+
+-(void)testRightAndWidthConstraintIsIncludedForHorizontal
+{
+    [self assertConstraintIsIncludedWithAttribute:NSLayoutAttributeRight orientation:NSLayoutConstraintOrientationHorizontal expectedConstraints:@[@"width", @"constraint"]];
+}
+
+-(void)testTrailingAndWidthConstraintIsIncludedForHorizontal
+{
+    [self assertConstraintIsIncludedWithAttribute:NSLayoutAttributeTrailing orientation:NSLayoutConstraintOrientationHorizontal expectedConstraints:@[@"width", @"constraint"]];
+}
+
+-(void)testConstraintWithBottomAttributeIsIncludedForVertical
+{
+    [self assertConstraintIsIncludedWithAttribute:NSLayoutAttributeBottom orientation:NSLayoutConstraintOrientationVertical expectedConstraints:@[@"constraint"]];;
+}
+
+-(void)testConstraintWithTopAttributeIsIncludedForVertical
+{
+    [self assertConstraintIsIncludedWithAttribute:NSLayoutAttributeTop orientation:NSLayoutConstraintOrientationVertical expectedConstraints:@[@"height",  @"constraint"]];
+}
+
+-(void)testConstraintWithCenterXAttibuteIsIncludedForHorizontal
+{
+    [self assertConstraintIsIncludedWithAttribute:NSLayoutAttributeCenterX orientation:NSLayoutConstraintOrientationHorizontal expectedConstraints:@[@"width", @"constraint"]];
+}
+
+-(void)testConstraintWithCenterYAttibuteIsIncludedForVertical
+{
+    [self assertConstraintIsIncludedWithAttribute:NSLayoutAttributeCenterY orientation:NSLayoutConstraintOrientationVertical expectedConstraints:@[@"height", @"constraint"]];
+}
+
+-(void)testConstraintWithBaselineAttributeIsIncludedForVertical
+{
+    [self assertConstraintIsIncludedWithAttribute:NSLayoutAttributeBaseline orientation:NSLayoutConstraintOrientationVertical expectedConstraints:@[@"constraint"]];
+}
+
+-(void)testSiblingViewWidthConstraintIsIncludedOrientationHorizontal
+{
+    NSView *rootView = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
+    [self createConstraintsForView:rootView];
+    
+    NSView *view = [[NSView alloc] init];
+    [rootView addSubview:view];
+    
+    NSView *view2 = [[NSView alloc] init];
+    [rootView addSubview:view2];
+    
+    NSLayoutConstraint *widthConstraintForView2 = [NSLayoutConstraint constraintWithItem:view2 attribute:NSLayoutAttributeWidth relatedBy:NSLayoutRelationEqual toItem:nil attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:100];
+    [engine addConstraint:widthConstraintForView2];
+    
+    NSLayoutConstraint *widthViewEqualsWidthView2 = [NSLayoutConstraint constraintWithItem:view attribute:NSLayoutAttributeWidth relatedBy:NSLayoutRelationEqual toItem:view2 attribute:NSLayoutAttributeWidth multiplier:1.0 constant:0];
+    
+    [engine addConstraint:widthConstraintForView2];
+    [engine addConstraint:widthViewEqualsWidthView2];
+    
+    NSArray *constraints = [engine constraintsAffectingLayoutForOrientation:NSLayoutConstraintOrientationHorizontal view:view];
+    XCTAssertEqual([constraints count], 2);
+    
+    XCTAssertEqual([constraints objectAtIndex:0], widthConstraintForView2);
+    XCTAssertEqual([constraints objectAtIndex:1], widthViewEqualsWidthView2);
+}
+
+-(void)testImplicitSiblingViewConstraintsAreIncludedForVerticialOrientation
+{
+    NSView *rootView = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
+
+    NSView *view = [[NSView alloc] init];
+    [rootView addSubview:view];
+    
+    NSView *view2 = [[NSView alloc] init];
+    [rootView addSubview:view2];
+    
+    NSView *view3 = [[NSView alloc] init];
+    [rootView addSubview:view3];
+    
+    NSLayoutConstraint *heightView1EqualsWidthView2 = [NSLayoutConstraint constraintWithItem:view attribute:NSLayoutAttributeHeight relatedBy:NSLayoutRelationEqual toItem:view2 attribute:NSLayoutAttributeWidth multiplier:1.0 constant:0];
+    [engine addConstraint:heightView1EqualsWidthView2];
+    
+    NSLayoutConstraint *widthView2EqualsHeightView3 = [NSLayoutConstraint constraintWithItem:view2 attribute:NSLayoutAttributeWidth relatedBy:NSLayoutRelationEqual toItem:view3 attribute:NSLayoutAttributeHeight multiplier:1.0 constant:0];
+    [engine addConstraint:widthView2EqualsHeightView3];
+    
+    NSLayoutConstraint *heightConstraintForView3 = [NSLayoutConstraint constraintWithItem:view3 attribute:NSLayoutAttributeHeight relatedBy:NSLayoutRelationEqual toItem:nil attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:100];
+    [engine addConstraint:heightConstraintForView3];
+    
+    NSArray *constraints = [engine constraintsAffectingLayoutForOrientation:NSLayoutConstraintOrientationVertical view:view];
+    XCTAssertEqual([constraints count], 3);
+    
+    XCTAssertEqual([constraints objectAtIndex:0], heightView1EqualsWidthView2);
+    XCTAssertEqual([constraints objectAtIndex:1], widthView2EqualsHeightView3);
+    XCTAssertEqual([constraints objectAtIndex:2], heightConstraintForView3);
+}
+
 @end

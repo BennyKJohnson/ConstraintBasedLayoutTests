@@ -1,8 +1,7 @@
+#import <AppKit/AppKit.h>
 
 #ifndef CustomInstrinctContentSizeView_h
 #define CustomInstrinctContentSizeView_h
-
-#import <AppKit/AppKit.h>
 
 @interface CustomInstrinctContentSizeView : NSView
 

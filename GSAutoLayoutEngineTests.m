@@ -106,6 +106,25 @@ CGFloat minimalPriorityHackValue = 1.0;
     return view;
 }
 
+- (NSDictionary*)createConstraintsForView: (NSView*)view
+{
+    [engine addInternalConstraintsToView:view];
+    NSLayoutConstraint *widthConstraint = [NSLayoutConstraint
+            constraintWithItem:view attribute:NSLayoutAttributeWidth
+            relatedBy:NSLayoutRelationEqual
+            toItem:nil
+            attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:view.frame.size.width];
+    NSLayoutConstraint *heightConstraint = [NSLayoutConstraint constraintWithItem:view attribute:NSLayoutAttributeHeight relatedBy:NSLayoutRelationEqual toItem:nil attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:view.frame.size.height];
+    
+    [engine addConstraint: widthConstraint];
+    [engine addConstraint: heightConstraint];
+
+    return @{
+        @"width": widthConstraint,
+        @"height": heightConstraint,
+    };
+}
+
 -(void)centerSubView: (NSView*)subView inSuperView: (NSView*)superView
 {
     NSLayoutConstraint *subViewCenterXConstraint = [NSLayoutConstraint constraintWithItem:subView attribute:NSLayoutAttributeCenterX relatedBy:NSLayoutRelationEqual toItem:superView attribute:NSLayoutAttributeCenterX multiplier:1.0 constant:0];

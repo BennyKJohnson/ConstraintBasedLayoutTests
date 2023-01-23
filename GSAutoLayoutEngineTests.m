@@ -72,10 +72,8 @@ CGFloat minimalPriorityHackValue = 1.0;
     [self addPositionConstraintsForSubView:subView superView:superView position:NSMakePoint(0, 0)];
 }
 
-- (NSView*)createRootViewWithSize: (NSSize)size
+-(void)addInternalConstraintsToView: (NSView*)view
 {
-    NSView *view = [[NSView alloc] init];
-
     NSLayoutConstraint *viewMinXConstraint = [NSLayoutConstraint
             constraintWithItem:view attribute:32
             relatedBy:NSLayoutRelationEqual
@@ -87,6 +85,15 @@ CGFloat minimalPriorityHackValue = 1.0;
             relatedBy:NSLayoutRelationEqual
             toItem:nil
             attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:0];
+    [engine addConstraints: @[
+        viewMinXConstraint,
+        viewMinYConstraint,
+    ]];
+}
+
+- (NSView*)createRootViewWithSize: (NSSize)size
+{
+    NSView *view = [[NSView alloc] init];
 
     NSLayoutConstraint *widthConstraint = [NSLayoutConstraint
             constraintWithItem:view attribute:NSLayoutAttributeWidth
@@ -95,10 +102,8 @@ CGFloat minimalPriorityHackValue = 1.0;
             attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:size.width];
     
     NSLayoutConstraint *heightConstraint = [NSLayoutConstraint constraintWithItem:view attribute:NSLayoutAttributeHeight relatedBy:NSLayoutRelationEqual toItem:nil attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:size.height];
-    
+    [self addInternalConstraintsToView: view];
     [engine addConstraints: @[
-        viewMinXConstraint,
-        viewMinYConstraint,
         widthConstraint,
         heightConstraint
     ]];
@@ -108,7 +113,7 @@ CGFloat minimalPriorityHackValue = 1.0;
 
 - (NSDictionary*)createConstraintsForView: (NSView*)view
 {
-    [engine addInternalConstraintsToView:view];
+    [self addInternalConstraintsToView: view];
     NSLayoutConstraint *widthConstraint = [NSLayoutConstraint
             constraintWithItem:view attribute:NSLayoutAttributeWidth
             relatedBy:NSLayoutRelationEqual

@@ -935,7 +935,7 @@ CGFloat minimalPriorityHackValue = 1.0;
 
 -(void)testConstraintsAffectingLayoutForOrientationViewWithoutConstraintsReturnsEmptyArray {
     NSView *view = [[NSView alloc] init];
-    [engine addInternalConstraintsToView: view];
+    [self addInternalConstraintsToView: view];
     
     NSArray *constraints = [engine constraintsAffectingLayoutForOrientation:NSLayoutConstraintOrientationVertical view:view];
     XCTAssertEqual([constraints count], 0);

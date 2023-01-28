@@ -1070,4 +1070,128 @@ CGFloat minimalPriorityHackValue = 1.0;
     XCTAssertEqual([constraints objectAtIndex:2], heightConstraintForView3);
 }
 
+
+-(void)addConflictingConstraintsWithAttribute: (NSLayoutAttribute)attribute toView: (NSView*)view
+{
+    NSLayoutConstraint *constraint = [NSLayoutConstraint constraintWithItem:view attribute:attribute relatedBy:NSLayoutRelationEqual toItem:view.superview attribute:attribute multiplier:1.0 constant:200];
+    constraint.priority = NSLayoutPriorityDefaultHigh;
+    [engine addConstraint:constraint];
+    
+    NSLayoutConstraint *conflictingConstraint = [NSLayoutConstraint constraintWithItem:view attribute:attribute relatedBy:NSLayoutRelationEqual toItem:view.superview attribute:attribute multiplier:1.0 constant:100];
+    conflictingConstraint.priority = NSLayoutPriorityDefaultHigh;
+    [engine addConstraint:conflictingConstraint];
+}
+
+-(NSView*)viewWithConflictingConstraintsWithAttribute: (NSLayoutAttribute)attribute
+{
+    NSView *view = [[NSView alloc] init];
+    [self addConflictingConstraintsWithAttribute:attribute toView:view];
+
+    return view;
+}
+
+-(NSView*)subviewWithConflictingConstraintsWithAttribute: (NSLayoutAttribute)attribute
+{
+    NSView *superView = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
+    [self createConstraintsForView:superView];
+
+    NSView *view = [[NSView alloc] init];
+    [superView addSubview:view];
+    [self addConflictingConstraintsWithAttribute:attribute toView:view];
+
+    return view;
+}
+
+-(void)testViewDoesNotHaveAmbiguousLayoutWithNoConstraints
+{
+    NSView *view = [[NSView alloc] init];
+    XCTAssertFalse([engine hasAmbiguousLayoutForView: view]);
+}
+
+-(void)testViewWithNoConflictingConstraintsDoesNotHaveAmbiguousLayout
+{
+    NSView *superview = [self createRootViewWithSize:NSMakeSize(100, 100)];
+    NSView *view = [[NSView alloc] init];
+    [superview addSubview:view];
+
+    NSLayoutConstraint *widthConstraint = [NSLayoutConstraint
+            constraintWithItem:view attribute:NSLayoutAttributeWidth
+            relatedBy:NSLayoutRelationEqual
+            toItem:nil
+            attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:view.frame.size.width];
+    NSLayoutConstraint *heightConstraint = [NSLayoutConstraint constraintWithItem:view attribute:NSLayoutAttributeHeight relatedBy:NSLayoutRelationEqual toItem:nil attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:view.frame.size.height];
+    [view addConstraints:@[widthConstraint, heightConstraint]];
+    [self pinView:view toBottomLeftCornerOfSuperView:superview];
+    
+    XCTAssertFalse([engine hasAmbiguousLayoutForView:view]);
+}
+
+-(void)testViewWithConflictingWithConstraintsHasAmbiguousLayout
+{
+    NSView *view = [self viewWithConflictingConstraintsWithAttribute:NSLayoutAttributeWidth];
+    XCTAssertTrue([engine hasAmbiguousLayoutForView:view]);
+}
+
+-(void)testViewWithConflictingHeightConstraintsHasAmbiguousLayout
+{
+    NSView *view = [self viewWithConflictingConstraintsWithAttribute:NSLayoutAttributeHeight];
+    XCTAssertTrue([engine hasAmbiguousLayoutForView:view]);
+}
+
+-(void)testViewWithConflictingLeadingConstraintsHasAmbiguousLayout
+{
+    NSView *view = [self subviewWithConflictingConstraintsWithAttribute:NSLayoutAttributeLeading];
+    XCTAssertTrue([engine hasAmbiguousLayoutForView:view]);
+}
+
+-(void)testViewWithConflictingTrailingConstraintsHasAmbiguousLayout
+{
+    NSView *view = [self subviewWithConflictingConstraintsWithAttribute:NSLayoutAttributeTrailing];
+    XCTAssertTrue([engine hasAmbiguousLayoutForView:view]);
+}
+
+-(void)testViewWithConflictingBottomConstraintsHasAmbiguousLayout
+{
+    NSView *view = [self subviewWithConflictingConstraintsWithAttribute:NSLayoutAttributeBottom];
+    XCTAssertTrue([engine hasAmbiguousLayoutForView:view]);
+}
+
+-(void)testViewWithConflictingTopConstraintsHasAmbiguousLayout
+{
+    NSView *view = [self subviewWithConflictingConstraintsWithAttribute:NSLayoutAttributeTop];
+    XCTAssertTrue([engine hasAmbiguousLayoutForView:view]);
+}
+
+-(void)testViewWithConflictingCenterXConstraintsHasAmbiguousLayout
+{
+    NSView *view = [self subviewWithConflictingConstraintsWithAttribute:NSLayoutAttributeCenterX];
+    XCTAssertTrue([engine hasAmbiguousLayoutForView:view]);
+}
+
+-(void)testViewWithConflictingCenterYConstraintsHasAmbiguousLayout
+{
+    NSView *view = [self subviewWithConflictingConstraintsWithAttribute:NSLayoutAttributeCenterY];
+    XCTAssertTrue([engine hasAmbiguousLayoutForView:view]);
+}
+
+-(void)testViewWithConflictingLastBaselineConstraintsHasAmbiguousLayout
+{
+    NSView *view = [self subviewWithConflictingConstraintsWithAttribute:NSLayoutAttributeLastBaseline];
+    XCTAssertTrue([engine hasAmbiguousLayoutForView:view]);
+}
+
+-(void)testViewWithConflictingFirstBaselineConstraintsHasAmbiguousLayout
+{
+    NSView *view = [self subviewWithConflictingConstraintsWithAttribute:NSLayoutAttributeFirstBaseline];
+    XCTAssertTrue([engine hasAmbiguousLayoutForView:view]);
+}
+
+-(void)testViewWithConflictingConstraintsOfDifferentDimensionHasAmbiguousLayout
+{
+    NSView *view = [self subviewWithConflictingConstraintsWithAttribute:NSLayoutAttributeHeight];
+    [self addConflictingConstraintsWithAttribute:NSLayoutAttributeWidth toView:view];
+    
+    XCTAssertTrue([engine hasAmbiguousLayoutForView:view]);
+}
+
 @end

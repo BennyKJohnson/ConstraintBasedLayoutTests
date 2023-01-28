@@ -362,4 +362,24 @@
     XCTAssertEqual([constraints objectAtIndex:0], bottomConstraint);
 }
 
+-(void)testViewWithoutConstraintsDoesNotHaveAmbiguousLayout
+{
+    NSView *view = [[NSView alloc] init];
+    XCTAssertFalse([view hasAmbiguousLayout]);
+}
+
+-(void)testViewWithConflictingHasAmbiguousLayout
+{
+    NSView *view = [self makeSubView];
+    NSLayoutConstraint *leadingConstraint = [NSLayoutConstraint constraintWithItem:view attribute:NSLayoutAttributeLeading relatedBy:NSLayoutRelationEqual toItem:view.superview attribute:NSLayoutAttributeLeading multiplier:1.0 constant:0];
+    leadingConstraint.priority = NSLayoutPriorityDefaultHigh;
+    [view.superview addConstraint: leadingConstraint];
+    
+    NSLayoutConstraint *conflictingLeadingConstraint = [NSLayoutConstraint constraintWithItem:view attribute:NSLayoutAttributeLeading relatedBy:NSLayoutRelationEqual toItem:view.superview attribute:NSLayoutAttributeLeading multiplier:1.0 constant:20];
+    conflictingLeadingConstraint.priority = NSLayoutPriorityDefaultHigh;
+    [view.superview addConstraint: conflictingLeadingConstraint];
+
+    XCTAssertTrue([view hasAmbiguousLayout]);
+}
+
 @end

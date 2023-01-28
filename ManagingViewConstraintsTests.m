@@ -57,6 +57,16 @@
     };
 }
 
+-(NSView*)makeSubView
+{
+    NSView *superview = [[NSView alloc] init];
+    [superview _initializeLayoutEngine];
+    NSView *view = [[NSView alloc] init];
+    [superview addSubview: view];
+
+    return view;
+}
+
 - (void)testViewAddConstraintUpdatesLayoutEngine
 {
     NSView *view = [[NSView alloc] init];
@@ -325,6 +335,31 @@
     NSArray *second = [view constraints];
     XCTAssertEqual([second count], 1);
     XCTAssertTrue([second indexOfObject: height] != NSNotFound);
+}
+
+
+-(void)testConstraintsAffectingLayoutForOrientationHorizontal
+{
+    NSView *view = [self makeSubView];
+    NSLayoutConstraint *leadingConstraint = [NSLayoutConstraint constraintWithItem:view attribute:NSLayoutAttributeLeading relatedBy:NSLayoutRelationEqual toItem:view.superview attribute:NSLayoutAttributeLeading multiplier:1.0 constant:0];
+    [view.superview addConstraint: leadingConstraint];
+    
+    NSArray *constraints = [view constraintsAffectingLayoutForOrientation:NSLayoutConstraintOrientationHorizontal];
+    XCTAssertEqual([constraints count], 1);
+    XCTAssertEqual([constraints objectAtIndex:0], leadingConstraint);
+}
+
+-(void)testConstraintsAffectingLayoutForOrientationVertical
+{
+    NSView *view = [self makeSubView];
+
+    NSLayoutConstraint *bottomConstraint = [NSLayoutConstraint constraintWithItem:view attribute:NSLayoutAttributeBottom relatedBy:NSLayoutRelationEqual toItem:view.superview attribute:NSLayoutAttributeBottom multiplier:1.0 constant:0];
+    [view.superview addConstraint: bottomConstraint];
+    
+    NSArray *constraints = [view constraintsAffectingLayoutForOrientation:NSLayoutConstraintOrientationVertical];
+
+    XCTAssertEqual([constraints count], 1);
+    XCTAssertEqual([constraints objectAtIndex:0], bottomConstraint);
 }
 
 @end

@@ -39,6 +39,13 @@ CGFloat minimalPriorityHackValue = 1.0;
             attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:constant];
 }
 
+-(NSLayoutConstraint*)optionalLeadingConstraintForView: (NSView*)view constant: (NSInteger)constant
+{
+    NSLayoutConstraint *leadingConstraint = [NSLayoutConstraint constraintWithItem:view attribute:NSLayoutAttributeLeading relatedBy:NSLayoutRelationEqual toItem:view.superview attribute:NSLayoutAttributeLeading multiplier:1.0 constant:constant];
+    leadingConstraint.priority = NSLayoutPriorityDefaultHigh;
+    return leadingConstraint;
+}
+
 -(void)addPositionConstraintsForSubView: (NSView*)subView superView: (NSView*)superView position: (NSPoint)position
 {
     NSLayoutConstraint *xConstraint = [NSLayoutConstraint constraintWithItem:subView attribute:NSLayoutAttributeLeft relatedBy:NSLayoutRelationEqual toItem:superView attribute:NSLayoutAttributeLeft multiplier:1.0 constant:position.x];
@@ -1192,6 +1199,74 @@ CGFloat minimalPriorityHackValue = 1.0;
     [self addConflictingConstraintsWithAttribute:NSLayoutAttributeWidth toView:view];
     
     XCTAssertTrue([engine hasAmbiguousLayoutForView:view]);
+}
+
+-(void)testExerciseAmbiguityInLayoutDoesNothingWhenViewDoesNotAmbiguity
+{
+    NSView *superview = [self createRootViewWithSize:NSMakeSize(100, 100)];
+    LayoutSpyView *view = [[LayoutSpyView alloc] init];
+    [superview addSubview:view];
+    
+    NSLayoutConstraint *widthConstraint = [self widthConstraintForView: view constant:10];
+    NSLayoutConstraint *heightConstraint = [self heightConstraintForView: view constant:10];
+    NSLayoutConstraint *bottomConstraint = [NSLayoutConstraint constraintWithItem:view attribute:NSLayoutAttributeBottom relatedBy:NSLayoutRelationEqual toItem:superview attribute:NSLayoutAttributeLeading multiplier:1.0 constant:0];
+    NSLayoutConstraint *leadingConstraint = [NSLayoutConstraint constraintWithItem:view attribute:NSLayoutAttributeLeading relatedBy:NSLayoutRelationEqual toItem:superview attribute:NSLayoutAttributeLeading multiplier:1.0 constant:0];
+    leadingConstraint.priority = NSLayoutPriorityDefaultHigh;
+    
+    [engine addConstraints:@[widthConstraint, heightConstraint, bottomConstraint, leadingConstraint]];
+
+    int callCountBeforeExercise = [view layoutEngineDidChangeAlignmentRectCallCount];
+    [engine exerciseAmbiguityInLayoutForView: view];
+    XCTAssertEqual([view layoutEngineDidChangeAlignmentRectCallCount], callCountBeforeExercise);
+}
+
+-(void)testExerciseAmbiguityInLayoutWhenViewDoesHaveAmbiguity
+{
+    NSView *superview = [self createRootViewWithSize:NSMakeSize(100, 100)];
+    LayoutSpyView *view = [[LayoutSpyView alloc] init];
+    [superview addSubview:view];
+    
+    NSLayoutConstraint *bottomConstraint = [NSLayoutConstraint constraintWithItem:view attribute:NSLayoutAttributeBottom relatedBy:NSLayoutRelationEqual toItem:superview attribute:NSLayoutAttributeLeading multiplier:1.0 constant:0];
+
+    [engine addConstraints: @[
+        [self widthConstraintForView: view constant:10],
+        [self heightConstraintForView: view constant:10],
+        bottomConstraint,
+        [self optionalLeadingConstraintForView:view constant:50],
+        [self optionalLeadingConstraintForView:view constant:0]
+    ]];
+
+    int callCountBeforeExercise = [view layoutEngineDidChangeAlignmentRectCallCount];
+    [engine exerciseAmbiguityInLayoutForView: view];
+    NSRect newFrame = [engine alignmentRectForView: view];
+
+    XCTAssertEqual([view layoutEngineDidChangeAlignmentRectCallCount], callCountBeforeExercise + 1);
+    XCTAssertTrue(NSEqualRects(newFrame, NSMakeRect(50, 0, 10, 10)));
+}
+
+-(void)testExerciseAmbiguityInLayoutCyclesOverSolutions
+{
+    NSView *superview = [self createRootViewWithSize:NSMakeSize(100, 100)];
+    LayoutSpyView *view = [[LayoutSpyView alloc] init];
+    [superview addSubview:view];
+    
+    NSLayoutConstraint *bottomConstraint = [NSLayoutConstraint constraintWithItem:view attribute:NSLayoutAttributeBottom relatedBy:NSLayoutRelationEqual toItem:superview attribute:NSLayoutAttributeLeading multiplier:1.0 constant:0];
+    
+    [engine addConstraints: @[
+        [self widthConstraintForView: view constant:10],
+        [self heightConstraintForView: view constant:10],
+        bottomConstraint,
+        [self optionalLeadingConstraintForView:view constant:10],
+        [self optionalLeadingConstraintForView:view constant:0]
+    ]];
+
+    int callCountBeforeExercise = [view layoutEngineDidChangeAlignmentRectCallCount];
+    [engine exerciseAmbiguityInLayoutForView: view];
+    [engine exerciseAmbiguityInLayoutForView: view];
+    
+    NSRect newFrame = [engine alignmentRectForView: view];
+    XCTAssertEqual([view layoutEngineDidChangeAlignmentRectCallCount], callCountBeforeExercise + 2);
+    XCTAssertTrue(NSEqualRects(newFrame, NSMakeRect(0, 0, 10, 10)));
 }
 
 @end

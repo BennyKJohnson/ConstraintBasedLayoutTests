@@ -179,7 +179,7 @@
 - (NSView*)createViewWithLayoutEngine: (NSSize)size
 {
     NSView *view = [[NSView alloc] init];
-    [self initLayoutEngineWithWidthAndHeightConstraintsForView: view size: NSMakeSize(500,500)];
+    [self initLayoutEngineWithWidthAndHeightConstraintsForView: view size: size];
     return view;
 }
 
@@ -380,6 +380,40 @@
     [view.superview addConstraint: conflictingLeadingConstraint];
 
     XCTAssertTrue([view hasAmbiguousLayout]);
+}
+
+-(void)testExcerciseAmbiguityInLayout
+{
+    NSView *rootView = [self createViewWithLayoutEngine: NSMakeSize(100, 100)];
+    NSView *view = [[NSView alloc] init];
+    [rootView addSubview: view];
+    
+    NSLayoutConstraint *widthConstraint = [NSLayoutConstraint constraintWithItem:view attribute:NSLayoutAttributeWidth relatedBy:NSLayoutRelationEqual toItem:nil attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:10];
+    NSLayoutConstraint *heightConstraint = [NSLayoutConstraint constraintWithItem:view attribute:NSLayoutAttributeHeight relatedBy:NSLayoutRelationEqual toItem:nil attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0 constant:10];
+
+    [view addConstraints: @[
+        widthConstraint,
+        heightConstraint,
+    ]];
+
+    NSLayoutConstraint *bottomConstraint = [NSLayoutConstraint constraintWithItem:view attribute:NSLayoutAttributeBottom relatedBy:NSLayoutRelationEqual toItem:view.superview attribute:NSLayoutAttributeLeading multiplier:1.0 constant:0];
+
+    NSLayoutConstraint *leadingConstraint = [NSLayoutConstraint constraintWithItem:view attribute:NSLayoutAttributeLeading relatedBy:NSLayoutRelationEqual toItem:view.superview attribute:NSLayoutAttributeLeading multiplier:1.0 constant:10];
+    leadingConstraint.priority = NSLayoutPriorityDefaultHigh;
+
+    NSLayoutConstraint *conflictingLeadingConstraint = [NSLayoutConstraint constraintWithItem:view attribute:NSLayoutAttributeLeading relatedBy:NSLayoutRelationEqual toItem:view.superview attribute:NSLayoutAttributeLeading multiplier:1.0 constant:0];
+    conflictingLeadingConstraint.priority = NSLayoutPriorityDefaultHigh;
+
+    [rootView addConstraints: @[
+        bottomConstraint,
+        conflictingLeadingConstraint,
+        leadingConstraint
+    ]];
+    
+    [view exerciseAmbiguityInLayout];
+
+    [rootView layoutSubtreeIfNeeded];
+    XCTAssertTrue(NSEqualRects(view.frame, NSMakeRect(0, 0, 10, 10)));
 }
 
 @end
